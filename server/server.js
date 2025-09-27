@@ -1,0 +1,75 @@
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // utveckling, tillåt alla
+  }
+});
+const gameState = {
+  words: [],
+  currentPlayer: 1,
+  players: {}
+};
+let nextPlayerNumber = 1;
+let availableNumbers = [];
+
+io.on("connection", (socket) => {
+  // Assign player number
+  let playerNum;
+  if (availableNumbers.length > 0) {
+    playerNum = availableNumbers.shift();
+  } else {
+    playerNum = nextPlayerNumber++;
+  }
+
+  gameState.players[socket.id] = playerNum;
+  socket.emit("playerNumber", playerNum);
+  console.log("En spelare anslöt:", socket.id, "Spelare nummer: ", playerNum);
+
+  // Send current State to the newly connected player
+  socket.emit("gameState", gameState);
+
+  // When a player sends a new word
+  socket.on("newWord", (word) => {
+    // Check if it's the player's turn
+    if (gameState.players[socket.id] !== gameState.currentPlayer) {
+      console.log(`Spelare ${socket.id} försökte skicka ord utanför sin tur.`);
+      return;
+    }
+
+    if (word.trim() !== ""){
+      gameState.words.push(word);
+
+      console.log(`Spelare ${socket.id} skickade ordet: ${word}`);
+      const activePlayers = Object.values(gameState.players);
+      gameState.currentPlayer = getNextPlayer(gameState.currentPlayer, activePlayers);
+      console.log("Nästa spelare är:", gameState.currentPlayer);
+    }
+
+    // Send to all players
+    io.emit("gameState", gameState);
+  });
+
+  // When a player disconnects
+  socket.on("disconnect", () => {
+    availableNumbers.push(gameState.players[socket.id]);
+    delete gameState.players[socket.id];
+    console.log("Spelare frånkopplad:", socket.id);
+  });
+});
+
+httpServer.listen(3000, () => {
+  console.log("Server körs på http://localhost:3000");
+});
+
+
+function getNextPlayer(current, players) {
+  if (players.length === 0) return null;
+  if (current === players.length) return players[0];
+
+  return current + 1;
+}
