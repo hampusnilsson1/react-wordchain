@@ -1,12 +1,10 @@
 import Letter from './Letter'
 import React, { useState, useEffect } from 'react'
 
-export default function Word({ socket }) {
+export default function Word({ socket, gameState, myPlayerNum }) {
     const [word, setWord] = useState('')
 
-    const [myPlayerNum, setMyPlayerNum] = useState(null);
-    const [gameState, setGameState] = useState(null)
-    
+    // Send Word to server
     const submitWord = (wordToSubmit) => {
         if (wordToSubmit.length > 0) {
             socket.emit("newWord", wordToSubmit);
@@ -14,9 +12,10 @@ export default function Word({ socket }) {
         }
     };
 
+    // Handle key presses
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (gameState && gameState.currentPlayer === myPlayerNum){
+            if (gameState && gameState.currentPlayer === myPlayerNum) {
                 if (e.key === "Backspace") {
                     setWord(prev => prev.slice(0, -1));
                 }
@@ -35,34 +34,10 @@ export default function Word({ socket }) {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [gameState, myPlayerNum, socket, word]);
-
-    // On connecting get player number
-    useEffect(() => {
-        socket.on("playerNumber", (num) => {
-            setMyPlayerNum(num);
-        });
-
-        return () => socket.off("playerNumber");
-    }, []);
-
-    // Listen for gameState updates from server
-    useEffect(() => {
-        const handleGameState = (state) => {
-            console.log("Ny gameState:", state);
-            setGameState(state);
-        };
-
-        socket.on("gameState", handleGameState);
-
-        return () => {
-            socket.off("gameState", handleGameState);
-        };
-    }, []);
+    }, [gameState, word]);
 
     return (
         <div>
-            <div>{myPlayerNum}</div>
             <div className='flex gap-0'>
                 {word.split('').map((char, idx) => (
                     <Letter key={idx} letter={char} />
