@@ -30,6 +30,9 @@ io.on("connection", (socket) => {
   socket.emit("playerNumber", playerNum);
   console.log("En spelare anslöt:", socket.id, "Spelare nummer: ", playerNum);
 
+  // Tell all players about the new player
+  io.emit("gameState", gameState);
+
   // Send current State to the newly connected player
   socket.emit("gameState", gameState);
 
@@ -56,9 +59,19 @@ io.on("connection", (socket) => {
 
   // When a player disconnects
   socket.on("disconnect", () => {
+    console.log("Spelare frånkopplad:", socket.id);
+
+    // If the disconnected player was the current player, move to next player
+    if (gameState.currentPlayer === playerNum) {
+      const activePlayers = Object.values(gameState.players);
+      gameState.currentPlayer = getNextPlayer(gameState.currentPlayer, activePlayers);
+      console.log("Den frånkopplade spelaren var den nuvarande spelaren. Flyttar till nästa spelare. Nästa spelare är:", gameState.currentPlayer);
+    }
+    // Free up the player number
     availableNumbers.push(gameState.players[socket.id]);
     delete gameState.players[socket.id];
-    console.log("Spelare frånkopplad:", socket.id);
+    // Send to all players
+    io.emit("gameState", gameState);
   });
 });
 
@@ -66,10 +79,13 @@ httpServer.listen(3000, () => {
   console.log("Server körs på http://localhost:3000");
 });
 
-
+// Calculate the next player in turn
 function getNextPlayer(current, players) {
   if (players.length === 0) return null;
-  if (current === players.length) return players[0];
-
-  return current + 1;
+  // Wrap around to the smallest number if at the end
+  if (current === Math.max(...players)) return Math.min(...players);
+  // Otherwise return the next highest number
+  const sorted = players.slice().sort((a, b) => a - b);
+  const idx = sorted.indexOf(current);
+  return sorted[idx + 1];
 }
