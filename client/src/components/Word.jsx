@@ -35,10 +35,9 @@ export default function Word({ socket, gameState, myPlayerNum }) {
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [gameState, word]);
-
     return (
-        <div>
-            <div className='flex gap-0'>
+        <div className='m-4 p-5 rounded-md shadow-xl max-w-3xl border border-gray-200'>
+            <div className='flex flex-wrap gap-0'>
                 {word.split('').map((char, idx) => (
                     <Letter key={idx} letter={char} />
                 ))}
