@@ -43,18 +43,18 @@ io.on("connection", (socket) => {
       console.log(`Spelare ${socket.id} försökte skicka ord utanför sin tur.`);
       return;
     }
-
-    if (word.trim() !== ""){
+    // Validate the word (not empty, not used before, starts with last letter of previous word)
+    if (word.trim() !== "" && !gameState.words.includes(word) && (gameState.words[gameState.words.length - 1]?.slice(-1) === word[0] || gameState.words.length === 0)) {
       gameState.words.push(word);
 
       console.log(`Spelare ${socket.id} skickade ordet: ${word}`);
       const activePlayers = Object.values(gameState.players);
       gameState.currentPlayer = getNextPlayer(gameState.currentPlayer, activePlayers);
       console.log("Nästa spelare är:", gameState.currentPlayer);
-    }
 
-    // Send to all players
-    io.emit("gameState", gameState);
+      // Send to all players
+      io.emit("gameState", gameState);
+    }
   });
 
   // When a player disconnects
