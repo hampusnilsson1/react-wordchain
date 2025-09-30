@@ -65,11 +65,16 @@ io.on("connection", (socket) => {
     if (gameState.currentPlayer === playerNum) {
       const activePlayers = Object.values(gameState.players);
       gameState.currentPlayer = getNextPlayer(gameState.currentPlayer, activePlayers);
-      console.log("Den frånkopplade spelaren var den nuvarande spelaren. Flyttar till nästa spelare. Nästa spelare är:", gameState.currentPlayer);
     }
-    // Free up the player number
-    availableNumbers.push(gameState.players[socket.id]);
+    // Remove and correct slots and next playernumber
     delete gameState.players[socket.id];
+    const playerNumbers = Object.values(gameState.players);
+    const maxNumber = playerNumbers.length > 0 ? Math.max(playerNumbers) : 0;
+    availableNumbers = availableNumbers.filter(num => num <= maxNumber);
+    nextPlayerNumber = maxNumber ? maxNumber + 1 : 1;
+    if (playerNum < maxNumber){
+      availableNumbers.push(playerNum);
+    }
     // Send to all players
     io.emit("gameState", gameState);
   });
