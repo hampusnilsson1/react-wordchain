@@ -1,5 +1,6 @@
 import React from 'react'
 import User from './components/User';
+import Opponent from './components/Opponent';
 import io from "socket.io-client";
 import { useEffect, useState } from 'react';
 
@@ -22,19 +23,15 @@ export default function App() {
   }, []);
 
   return (
-    <div>
-      <h1>Word Chain</h1>
-      <div className="flex">
-        <h3>Players Connected: </h3>
-        {gameState?.players &&
-          Object.entries(gameState.players).map(([id, value]) => (
-            <p key={id}>
-              {value},
-            </p>
-          ))
-        }
+    <div className='flex flex-col items-center justify-between  min-h-screen bg-gradient-to-b from-blue-100 to-blue-300'>
+      <div className='flex flex-col items-center p-4'>
+        <h1 className='text-5xl'>Word Chain</h1>
+        <div className="flex">
+          <h3>Players Connected: </h3>
+          {gameState?.players && Object.keys(gameState.players).length}
+        </div>
       </div>
-      <p>Currently Player {gameState?.currentPlayer}s Turn!</p>
+      <Opponent gameState={gameState}/>
       <User socket={socket} gameState={gameState} />
     </div>
   )

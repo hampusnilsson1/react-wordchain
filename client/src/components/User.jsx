@@ -1,5 +1,5 @@
 import React from 'react'
-import Word from './Word';
+import WordWriter from './WordWriter';
 import { useEffect, useState } from 'react';
 
 export default function User({ socket, gameState }) {
@@ -15,9 +15,9 @@ export default function User({ socket, gameState }) {
     }, []);
 
     return (
-        <div>
+        <div className='flex flex-col items-center justify-center'>
             <div>Player {myPlayerNum}</div>
-            <Word socket={socket} gameState={gameState} myPlayerNum={myPlayerNum}></Word>
+            <WordWriter socket={socket} gameState={gameState} myPlayerNum={myPlayerNum}></WordWriter>
         </div>
     )
 }
